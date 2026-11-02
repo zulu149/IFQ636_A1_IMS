@@ -15,6 +15,9 @@ const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const isOwner = (invoice, user) => String(invoice.customer?._id) === String(user._id);
 
+const isVisibleTo = (invoice, user) =>
+    user.role === 'admin' || (isOwner(invoice, user) && invoice.status !== 'draft');
+
 const customerExists = async (id) => Boolean(await User.findOne({ _id: id, role: 'customer' }));
 
 const notFound = (res) => res.status(404).json({ message: 'Invoice not found' });
@@ -61,8 +64,7 @@ const getInvoices = async (req, res) => {
 const getInvoiceById = async (req, res) => {
     try {
         const invoice = await Invoice.findById(req.params.id).populate('customer', CUSTOMER_FIELDS);
-        const visible = invoice && (req.user.role === 'admin' || (isOwner(invoice, req.user) && invoice.status !== 'draft'));
-        if (!visible) return notFound(res);
+        if (!invoice || !isVisibleTo(invoice, req.user)) return notFound(res);
         res.json(invoice);
     } catch (error) {
         sendError(res, error);
@@ -135,4 +137,60 @@ const updateInvoiceStatus = async (req, res) => {
     }
 };
 
-module.exports = { getInvoices, getInvoiceById, createInvoice, updateInvoice, deleteInvoice, updateInvoiceStatus };
+const submitPayment = async (req, res) => {
+    try {
+        const invoice = await Invoice.findById(req.params.id);
+        if (!invoice || !isVisibleTo(invoice, req.user)) return notFound(res);
+        if (invoice.status === 'payment_submitted') {
+            return res.status(409).json({ message: 'A payment for this invoice is already awaiting review' });
+        }
+        if (invoice.status !== 'issued') {
+            return res.status(409).json({ message: 'Only issued invoices can be paid' });
+        }
+
+        const { method, reference, paidOn } = req.body;
+        invoice.payment = { amount: invoice.total, method, reference, paidOn, submittedAt: new Date() };
+        invoice.status = 'payment_submitted';
+        await invoice.save();
+        await invoice.populate('customer', CUSTOMER_FIELDS);
+        res.json(invoice);
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
+const reviewPayment = async (req, res) => {
+    try {
+        const { decision, reason } = req.body;
+        const invoice = await Invoice.findById(req.params.id);
+        if (!invoice) return notFound(res);
+        if (invoice.status !== 'payment_submitted') {
+            return res.status(409).json({ message: 'There is no payment awaiting review for this invoice' });
+        }
+
+        invoice.payment.reviewedAt = new Date();
+        if (decision === 'confirm') {
+            invoice.status = 'paid';
+            invoice.payment.rejectionReason = undefined;
+        } else {
+            invoice.status = 'issued';
+            invoice.payment.rejectionReason = reason.trim();
+        }
+        await invoice.save();
+        await invoice.populate('customer', CUSTOMER_FIELDS);
+        res.json(invoice);
+    } catch (error) {
+        sendError(res, error);
+    }
+};
+
+module.exports = {
+    getInvoices,
+    getInvoiceById,
+    createInvoice,
+    updateInvoice,
+    deleteInvoice,
+    updateInvoiceStatus,
+    submitPayment,
+    reviewPayment,
+};

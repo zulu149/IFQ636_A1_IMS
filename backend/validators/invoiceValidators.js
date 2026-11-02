@@ -1,10 +1,15 @@
 const mongoose = require('mongoose');
+const { PAYMENT_METHODS } = require('../models/Invoice');
 const { isBlank, respond } = require('./validationHelpers');
 
 const MAX_ITEMS = 50;
 const MAX_DESCRIPTION_LENGTH = 200;
 const MAX_NOTES_LENGTH = 1000;
+const MAX_REFERENCE_LENGTH = 100;
+const MAX_REASON_LENGTH = 500;
+const DAY_MS = 24 * 60 * 60 * 1000;
 const ADMIN_STATUS_CHANGES = ['issued', 'void'];
+const PAYMENT_DECISIONS = ['confirm', 'reject'];
 
 const toNumber = (value) => {
     if (typeof value === 'number') return value;
@@ -70,6 +75,35 @@ const validateStatusChange = (req, res, next) => {
     respond(res, next, errors);
 };
 
+const validatePaymentSubmission = (req, res, next) => {
+    const { method, reference, paidOn } = req.body;
+    const errors = {};
+
+    if (!method) errors.method = 'Payment method is required';
+    else if (!PAYMENT_METHODS.includes(method)) errors.method = 'Select a valid payment method';
+    if (isBlank(reference)) errors.reference = 'Payment reference is required';
+    else if (reference.trim().length > MAX_REFERENCE_LENGTH) errors.reference = `Reference must be ${MAX_REFERENCE_LENGTH} characters or fewer`;
+    if (!paidOn) errors.paidOn = 'Payment date is required';
+    else if (Number.isNaN(Date.parse(paidOn))) errors.paidOn = 'Enter a valid payment date';
+    else if (Date.parse(paidOn) > startOfTodayUtc() + DAY_MS) errors.paidOn = 'Payment date cannot be in the future';
+
+    respond(res, next, errors);
+};
+
+const validatePaymentReview = (req, res, next) => {
+    const { decision, reason } = req.body;
+    const errors = {};
+
+    if (!PAYMENT_DECISIONS.includes(decision)) {
+        errors.decision = `Decision must be one of: ${PAYMENT_DECISIONS.join(', ')}`;
+    } else if (decision === 'reject') {
+        if (isBlank(reason)) errors.reason = 'A reason is required when rejecting a payment';
+        else if (reason.trim().length > MAX_REASON_LENGTH) errors.reason = `Reason must be ${MAX_REASON_LENGTH} characters or fewer`;
+    }
+
+    respond(res, next, errors);
+};
+
 const validateInvoiceId = (req, res, next) => {
     if (!mongoose.isValidObjectId(req.params.id)) {
         return res.status(404).json({ message: 'Invoice not found' });
@@ -77,4 +111,10 @@ const validateInvoiceId = (req, res, next) => {
     next();
 };
 
-module.exports = { validateInvoice, validateStatusChange, validateInvoiceId };
+module.exports = {
+    validateInvoice,
+    validateStatusChange,
+    validatePaymentSubmission,
+    validatePaymentReview,
+    validateInvoiceId,
+};

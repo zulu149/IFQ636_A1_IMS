@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const Counter = require('./Counter');
 
 const INVOICE_STATUSES = ['draft', 'issued', 'payment_submitted', 'paid', 'void'];
+const PAYMENT_METHODS = ['bank_transfer', 'card', 'paypal', 'other'];
 
 const round2 = (value) => Math.round(value * 100) / 100;
 
@@ -10,6 +11,16 @@ const lineItemSchema = new mongoose.Schema({
     description: { type: String, required: true, trim: true, maxlength: 200 },
     quantity: { type: Number, required: true, min: 0.01 },
     unitPrice: { type: Number, required: true, min: 0 },
+}, { _id: false });
+
+const paymentSchema = new mongoose.Schema({
+    amount: { type: Number, required: true, min: 0 },
+    method: { type: String, enum: PAYMENT_METHODS, required: true },
+    reference: { type: String, required: true, trim: true, maxlength: 100 },
+    paidOn: { type: Date, required: true },
+    submittedAt: { type: Date, required: true },
+    reviewedAt: { type: Date },
+    rejectionReason: { type: String, trim: true, maxlength: 500 },
 }, { _id: false });
 
 const invoiceSchema = new mongoose.Schema({
@@ -28,6 +39,7 @@ const invoiceSchema = new mongoose.Schema({
     dueDate: { type: Date, required: true },
     status: { type: String, enum: INVOICE_STATUSES, default: 'draft' },
     notes: { type: String, trim: true, maxlength: 1000 },
+    payment: { type: paymentSchema },
 }, { timestamps: true, toJSON: { virtuals: true } });
 
 invoiceSchema.virtual('isOverdue').get(function () {
@@ -51,3 +63,4 @@ invoiceSchema.pre('save', async function () {
 
 module.exports = mongoose.model('Invoice', invoiceSchema);
 module.exports.INVOICE_STATUSES = INVOICE_STATUSES;
+module.exports.PAYMENT_METHODS = PAYMENT_METHODS;
