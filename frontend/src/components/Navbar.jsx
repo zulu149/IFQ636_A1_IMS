@@ -22,6 +22,7 @@ const Navbar = () => {
                 <span className="ml-2 bg-white text-blue-600 text-xs font-semibold px-2 py-1 rounded">Admin</span>
               )}
             </span>
+            <Link to="/invoices" className="mr-4">Invoices</Link>
             <Link to="/profile" className="mr-4">Profile</Link>
             <button
               onClick={handleLogout}
