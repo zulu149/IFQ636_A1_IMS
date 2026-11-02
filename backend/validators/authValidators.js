@@ -1,19 +1,12 @@
+const { isBlank, respond } = require('./validationHelpers');
+
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_NAME_LENGTH = 100;
 const MAX_TEXT_LENGTH = 200;
 const MIN_PASSWORD_LENGTH = 8;
 
-const isBlank = (value) => typeof value !== 'string' || value.trim() === '';
-
 const normaliseEmail = (body) => {
     if (typeof body.email === 'string') body.email = body.email.trim().toLowerCase();
-};
-
-const respond = (res, next, errors) => {
-    if (Object.keys(errors).length) {
-        return res.status(400).json({ message: 'Validation failed', errors });
-    }
-    next();
 };
 
 const checkName = (name, errors) => {
