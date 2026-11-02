@@ -5,6 +5,8 @@ const MAX_NAME_LENGTH = 100;
 const MIN_PASSWORD_LENGTH = 8;
 const MAX_DESCRIPTION_LENGTH = 200;
 const MAX_NOTES_LENGTH = 1000;
+const MAX_REFERENCE_LENGTH = 100;
+const MAX_REASON_LENGTH = 500;
 
 export const MAX_LINE_ITEMS = 50;
 
@@ -48,5 +50,22 @@ export const validateInvoice = ({ customer, dueDate, taxRate, notes, items }) =>
     if (!(Number(item.quantity) > 0)) errors[`${prefix}.quantity`] = 'Quantity must be greater than 0';
     if (item.unitPrice === '' || !(Number(item.unitPrice) >= 0)) errors[`${prefix}.unitPrice`] = 'Unit price must be 0 or more';
   });
+  return errors;
+};
+
+export const validatePayment = ({ method, reference, paidOn }) => {
+  const errors = {};
+  if (!method) errors.method = 'Payment method is required';
+  if (!reference.trim()) errors.reference = 'Payment reference is required';
+  else if (reference.trim().length > MAX_REFERENCE_LENGTH) errors.reference = `Reference must be ${MAX_REFERENCE_LENGTH} characters or fewer`;
+  if (!paidOn) errors.paidOn = 'Payment date is required';
+  else if (paidOn > todayInputValue()) errors.paidOn = 'Payment date cannot be in the future';
+  return errors;
+};
+
+export const validateRejection = ({ reason }) => {
+  const errors = {};
+  if (!reason.trim()) errors.reason = 'A reason is required when rejecting a payment';
+  else if (reason.trim().length > MAX_REASON_LENGTH) errors.reason = `Reason must be ${MAX_REASON_LENGTH} characters or fewer`;
   return errors;
 };

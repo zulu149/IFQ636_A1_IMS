@@ -6,6 +6,9 @@ import Alert from '../components/Alert';
 import ConfirmDialog from '../components/ConfirmDialog';
 import EmptyState from '../components/EmptyState';
 import InvoiceTotals from '../components/InvoiceTotals';
+import PaymentDetails from '../components/PaymentDetails';
+import PaymentForm from '../components/PaymentForm';
+import PaymentReview from '../components/PaymentReview';
 import Spinner from '../components/Spinner';
 import StatusBadge from '../components/StatusBadge';
 import { formatCurrency, formatDate } from '../utils/format';
@@ -87,6 +90,60 @@ const InvoiceDetail = () => {
       setBusy(false);
       setPendingAction(null);
     }
+  };
+
+  const handlePaymentUpdate = (updated, successMessage) => {
+    setInvoice(updated);
+    setActionError('');
+    setMessage(successMessage);
+  };
+
+  const renderPaymentSection = () => {
+    const { status, payment } = invoice;
+
+    if (status === 'payment_submitted') {
+      return isAdmin ? (
+        <PaymentReview invoice={invoice} onReviewed={handlePaymentUpdate} />
+      ) : (
+        <section className="bg-white rounded shadow p-6 border-l-4 border-yellow-400">
+          <h2 className="text-lg font-bold mb-1">Payment submitted</h2>
+          <p className="text-sm text-gray-600 mb-4">Your payment is awaiting confirmation.</p>
+          <PaymentDetails payment={payment} />
+        </section>
+      );
+    }
+
+    if (status === 'paid' && payment) {
+      return (
+        <section className="bg-white rounded shadow p-6 border-l-4 border-green-500">
+          <h2 className="text-lg font-bold mb-4">Payment received</h2>
+          <PaymentDetails payment={payment} />
+        </section>
+      );
+    }
+
+    if (status === 'issued') {
+      const rejection = payment?.rejectionReason && (
+        <Alert>
+          {isAdmin ? 'The last payment was rejected: ' : 'Your last payment was rejected: '}
+          {payment.rejectionReason}
+        </Alert>
+      );
+      if (isAdmin) return rejection || null;
+      return (
+        <>
+          {rejection}
+          <PaymentForm
+            invoice={invoice}
+            onSubmitted={(updated) =>
+              handlePaymentUpdate(updated, 'Payment submitted. The invoice will be marked as paid once it is confirmed.')
+            }
+          />
+        </>
+      );
+    }
+
+    return null;
   };
 
   if (loading) return <Spinner label="Loading invoice..." />;
@@ -215,6 +272,8 @@ const InvoiceDetail = () => {
           </div>
         )}
       </div>
+
+      <div className="mt-6">{renderPaymentSection()}</div>
 
       <ConfirmDialog
         open={Boolean(action)}

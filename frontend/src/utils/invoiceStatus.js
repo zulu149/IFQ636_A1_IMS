@@ -6,6 +6,13 @@ export const STATUS_LABELS = {
   void: 'Void',
 };
 
+export const PAYMENT_METHOD_LABELS = {
+  bank_transfer: 'Bank transfer',
+  card: 'Card',
+  paypal: 'PayPal',
+  other: 'Other',
+};
+
 export const STATUS_STYLES = {
   draft: 'bg-gray-200 text-gray-800',
   issued: 'bg-blue-100 text-blue-800',
