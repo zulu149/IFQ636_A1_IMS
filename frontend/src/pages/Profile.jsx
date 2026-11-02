@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 
 const Profile = () => {
-  const { user } = useAuth(); // Access user token from context
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -17,9 +17,7 @@ const Profile = () => {
     const fetchProfile = async () => {
       setLoading(true);
       try {
-        const response = await axiosInstance.get('/api/auth/profile', {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
+        const response = await axiosInstance.get('/api/auth/profile');
         setFormData({
           name: response.data.name,
           email: response.data.email,
@@ -40,9 +38,7 @@ const Profile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axiosInstance.put('/api/auth/profile', formData, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
+      await axiosInstance.put('/api/auth/profile', formData);
       alert('Profile updated successfully!');
     } catch (error) {
       alert('Failed to update profile. Please try again.');
