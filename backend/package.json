@@ -1,7 +1,7 @@
 {
-  "name": "task-manager-backend",
+  "name": "invoice-management-system-backend",
   "version": "1.0.0",
-  "description": "Backend for Task Manager App",
+  "description": "Backend API for the Invoice Management System",
   "main": "server.js",
   "scripts": {
     "test": "mocha",
