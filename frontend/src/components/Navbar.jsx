@@ -13,9 +13,15 @@ const Navbar = () => {
   return (
     <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
       <Link to="/" className="text-2xl font-bold">Invoice Manager</Link>
-      <div>
+      <div className="flex items-center">
         {user ? (
           <>
+            <span className="mr-4">
+              {user.name}
+              {user.role === 'admin' && (
+                <span className="ml-2 bg-white text-blue-600 text-xs font-semibold px-2 py-1 rounded">Admin</span>
+              )}
+            </span>
             <Link to="/profile" className="mr-4">Profile</Link>
             <button
               onClick={handleLogout}
