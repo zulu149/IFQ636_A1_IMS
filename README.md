@@ -29,7 +29,7 @@ TO DO Features:
 
 - profile page + Jira - Jack
 - admin should be able to manage users
-- UI update - Dan
-- CRUD invoices
+- UI update - Dan (may not be applicable, A2 rubric does not award UI/UX directly, only indirectly via functionality and usability)
+- CRUD invoices - Dan
 - activity log
 
