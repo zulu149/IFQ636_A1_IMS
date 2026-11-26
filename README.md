@@ -25,6 +25,8 @@
 
 ---
 
+TO DO Features:
+
 - profile page
 - admin should be able to manage users
 - UI update
