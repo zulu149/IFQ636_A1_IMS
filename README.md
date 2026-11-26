@@ -24,3 +24,10 @@
 * **GitHub Account** [[https://github.com/signup?source=login](https://github.com/signup?source=login)]** **
 
 ---
+
+- profile page
+- admin should be able to manage users
+- UI update
+- CRUD invoices
+- activity log
+
