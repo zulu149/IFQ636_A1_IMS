@@ -29,7 +29,7 @@ TO DO Features:
 
 - profile page + Jira - Jack
 - admin should be able to manage users
-- UI update
+- UI update - Dan
 - CRUD invoices
 - activity log
 
